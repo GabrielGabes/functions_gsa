@@ -313,8 +313,7 @@ def num_cat_hip(df, col_cat, col_num):
 
     # GRAFICO ####################################################################
     fig = px.violin(df, x=col_cat, y=col_num, color=col_cat, box=True, points="all")
-    fig.show()
-    list()
+    return(fig)
 
 #############################################################################################################
 
