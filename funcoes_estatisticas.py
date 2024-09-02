@@ -312,7 +312,7 @@ def num_cat_hip(df, col_cat, col_num):
                 display(dunn_test)
 
     # GRAFICO ####################################################################
-    fig = px.violin(df_cv_results_dt, x=col_cat, y=col_num, color=col_cat, box=True, points="all")
+    fig = px.violin(df, x=col_cat, y=col_num, color=col_cat, box=True, points="all")
 
 #############################################################################################################
 
