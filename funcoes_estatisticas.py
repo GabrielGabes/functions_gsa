@@ -309,11 +309,12 @@ def num_cat_hip(df, col_cat, col_num):
                 dunn_test = sp.posthoc_dunn(df, val_col=col_num, group_col=col_cat, p_adjust='bonferroni')
                 for i in dunn_test.columns:dunn_test[i] = dunn_test[i].apply(lambda x: pval_string(x))
                 print('P-value (Pós-Teste de Dunn):')
-                display(dunn_test)
+                display(print(dunn_test))
 
     # GRAFICO ####################################################################
     fig = px.violin(df, x=col_cat, y=col_num, color=col_cat, box=True, points="all")
     fig.show()
+    list()
 
 #############################################################################################################
 
