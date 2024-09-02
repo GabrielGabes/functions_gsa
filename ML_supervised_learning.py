@@ -39,7 +39,6 @@ def int_conf(vetor):
 
 import matplotlib.pyplot as plt
 plt.style.use('dark_background')
-%matplotlib inline
 
 # Histograma + Medidas Estatisticas da validação cruzada
 def avaliar_validacao(vetor):
