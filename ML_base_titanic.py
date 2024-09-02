@@ -1,7 +1,3 @@
-import matplotlib.pyplot as plt
-plt.style.use('dark_background')
-%matplotlib inline
-
 # Manipulação e Tratamento de dados
 import openpyxl
 import pandas as pd
@@ -40,7 +36,7 @@ for coluna in df.columns:
             print('2 niveis:', coluna, '=>', categorias)
             colunas_categoricas.append(coluna)
         else:
-            print('3 niveis:', coluna, '=>', categorias)
+            print('3+ niveis:', coluna, '=>', categorias)
             colunas_categoricas.append(coluna)
 
 #################################################################################
