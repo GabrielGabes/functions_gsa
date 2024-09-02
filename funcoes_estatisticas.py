@@ -282,6 +282,7 @@ def group_normality_test(df, col_num, col_cat):
 
 import plotly.express as px # grafico
 import scipy.stats as stats # para os testes de hipotese
+import scikit_posthocs as sp
 
 def num_cat_hip(df, col_cat, col_num):
     grupos = df.groupby(col_cat)[col_num].apply(list)
