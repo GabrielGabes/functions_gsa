@@ -33,10 +33,10 @@ for coluna in df.columns:
     if df[coluna].dtype == 'O':
         categorias = df[coluna].unique()
         if len(categorias) == 2:
-            print('2 niveis:', coluna, '=>', categorias)
+            #print('2 niveis:', coluna, '=>', categorias)
             colunas_categoricas.append(coluna)
         else:
-            print('3+ niveis:', coluna, '=>', categorias)
+            #print('3+ niveis:', coluna, '=>', categorias)
             colunas_categoricas.append(coluna)
 
 #################################################################################
