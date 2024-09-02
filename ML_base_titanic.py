@@ -1,15 +1,10 @@
+# Pacote Necessarios
+
 # Manipulação e Tratamento de dados
 import openpyxl
 import pandas as pd
 import numpy as np
 from numpy import NaN
-
-#ignorando Warning inuteis
-import warnings 
-from pandas.errors import SettingWithCopyWarning
-warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
-warnings.filterwarnings(action='ignore', category=FutureWarning)
-warnings.simplefilter(action='ignore', category=UserWarning)
 
 #################################################################################
 
