@@ -78,26 +78,26 @@ def fake_database2(n_samples=1000, seed=3141592):
 
     for i in range(5):
         if i >= 3:
-            df['x_bin'+str(i)] = np.random.choice(['cat0','cat1'], size=len(df))
+            df['x_bin'+str(i)] = np.random.choice(['sim','não'], size=len(df))
         else:
             df['x_bin'+str(i)] = np.nan
-            df['x_bin'+str(i)][df['y'] == 0] = np.random.choice(['cat0','cat1'], size=len(df), p=[.7,.3])
-            df['x_bin'+str(i)][df['y'] == 1] = np.random.choice(['cat0','cat1'], size=len(df), p=[.3,.7])
+            df['x_bin'+str(i)][df['y'] == 0] = np.random.choice(['sim','não'], size=len(df), p=[.7,.3])
+            df['x_bin'+str(i)][df['y'] == 1] = np.random.choice(['sim','não'], size=len(df), p=[.3,.7])
 
     for i in range(3):
         if i >= 2:
-            df['x_cat'+str(i)] = np.random.choice(['cat0','cat1','cat2',], size=len(df))
+            df['x_cat'+str(i)] = np.random.choice(['A','B','C',], size=len(df))
         else:
             df['x_cat'+str(i)] = np.nan
-            df['x_cat'+str(i)][df['y'] == 0] = np.random.choice(['cat0','cat1','cat2',], size=len(df), p=[.3,.3,.4])
-            df['x_cat'+str(i)][df['y'] == 1] = np.random.choice(['cat0','cat1','cat2',], size=len(df), p=[.2,.7,.1])
+            df['x_cat'+str(i)][df['y'] == 0] = np.random.choice(['A','B','C',], size=len(df), p=[.3,.3,.4])
+            df['x_cat'+str(i)][df['y'] == 1] = np.random.choice(['A','B','C',], size=len(df), p=[.2,.7,.1])
 
     for i in range(2):
         if i >= 1:
-            df['x_cat_'+str(i)] = np.random.choice(['cat0','cat1','cat2','cat3'], size=len(df))
+            df['x_cat_'+str(i)] = np.random.choice(['A','B','C','D'], size=len(df))
         else:
             df['x_cat_'+str(i)] = np.nan
-            df['x_cat_'+str(i)][df['y'] == 0] = np.random.choice(['cat0','cat1','cat2','cat3'], size=len(df), p=[.4,.3,.2,.1])
-            df['x_cat_'+str(i)][df['y'] == 1] = np.random.choice(['cat0','cat1','cat2','cat3'], size=len(df), p=[.1,.2,.3,.4])
+            df['x_cat_'+str(i)][df['y'] == 0] = np.random.choice(['A','B','C','D'], size=len(df), p=[.4,.3,.2,.1])
+            df['x_cat_'+str(i)][df['y'] == 1] = np.random.choice(['A','B','C','D'], size=len(df), p=[.1,.2,.3,.4])
 
     return df
