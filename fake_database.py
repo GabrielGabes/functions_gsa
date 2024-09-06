@@ -1,3 +1,10 @@
+#ignorando Warning inuteis
+import warnings 
+from pandas.errors import SettingWithCopyWarning
+warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
+warnings.filterwarnings(action='ignore', category=FutureWarning)
+warnings.simplefilter(action='ignore', category=UserWarning)
+
 from sklearn.datasets import make_classification
 import pandas as pd
 import numpy as np
