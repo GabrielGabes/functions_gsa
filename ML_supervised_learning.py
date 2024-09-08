@@ -1,7 +1,7 @@
 # Função para avaliação de modelos exibindo metricas de avaliação
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, RocCurveDisplay
 
-def avaliar_modelo(y_verdadeiro, y_predito, conjunto_nome):
+def avaliar_modelo(y_verdadeiro, y_predito, conjunto_nome, plotar_grafico=False):
     """
     Função para avaliar e imprimir o relatório de classificação e a matriz de confusão.
     """
@@ -20,4 +20,5 @@ def avaliar_modelo(y_verdadeiro, y_predito, conjunto_nome):
     print(confusion_matrix(y_verdadeiro, y_predito))
     print('*' * 70)
 
-    display(RocCurveDisplay.from_predictions(y_verdadeiro, y_predito, name = conjunto_nome))
+    if plotar_grafico == True:
+        display(RocCurveDisplay.from_predictions(y_verdadeiro, y_predito, name = conjunto_nome))
