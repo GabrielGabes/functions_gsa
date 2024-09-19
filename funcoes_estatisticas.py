@@ -264,58 +264,218 @@ def summary_num_nonparametric_groups(df, col_num, col_cat):
 ##########################################################################################################################################################################################################################
 # NORMALIDADE
 
-from scipy.stats import shapiro
-def group_normality_test(df, col_num, col_cat):
-    if len(df) > 5000:
-        return False
-    for _, group in df.groupby(col_cat):
-        # Aplicar o teste de Shapiro-Wilk à coluna numérica do grupo
-        stat, p_value = shapiro(group[col_num])
-        # Verificar o p-valor para avaliar a normalidade
-        if p_value < 0.05:
-            # Se algum grupo não for normal, retorna False
-            return False
-    # Se todos os grupos passarem no teste, retorna True
-    return True
+import pandas as pd
+from scipy.stats import shapiro, kstest, norm
+
+def group_normality_test(df, col_num, col_cat, type_response=0):
+    resultados = []
+
+    # Percorrer cada grupo de acordo com a coluna categórica
+    for group, subset in df.groupby(col_cat):
+        values = subset[col_num].dropna()  # Remover valores ausentes (NA)
+
+        # Verificar o tamanho do subset para decidir qual teste usar
+        if len(values) > 5000:
+            # Teste de Kolmogorov-Smirnov
+            test_stat, p_value = kstest(values, 'norm', args=(values.mean(), values.std()))
+            test_type = "ks"
+        else:
+            # Teste de Shapiro-Wilk
+            test_stat, p_value = shapiro(values)
+            test_type = "shapiro"
+
+        # Armazenar os resultados: grupo, p-valor, tipo de teste e quantidade de observações
+        resultados.append({
+            col_cat: group,
+            'p_value': p_value,
+            'test_used': test_type,
+            'n_observations': len(values)
+        })
+
+    # Criar o dataframe com os resultados
+    tabela = pd.DataFrame(resultados)
+
+    # Verificar se algum grupo tem p-valor < 0.05, indicando não normalidade
+    verificacao = any(tabela['p_value'] < 0.05)
+
+    # Retornar resultados com base no parâmetro type_response
+    if type_response == 0:
+        return tabela
+    elif type_response == 1:
+        return verificacao
+
+# Exemplo de uso
+# df é seu dataframe que contém as colunas necessárias
+# group_normality_test(df, 'idade', 'group')
+
 
 ####################################################################################################################################
 
-import plotly.express as px # grafico
-import scipy.stats as stats # para os testes de hipotese
-import scikit_posthocs as sp
+# Importar bibliotecas necessárias
+import pandas as pd
+import numpy as np
+from scipy import stats
+from mlxtend.evaluate import permutation_test
+from scipy.stats import shapiro, kstest, norm
 
-def num_cat_hip(df, col_cat, col_num):
-    grupos = df.groupby(col_cat)[col_num].apply(list)
+# Funções auxiliares de permutação
+def permutation_t_test(x, y):
+    p_value = permutation_test(x, y, method='approximate', num_rounds=10000, func='x_mean != y_mean')
+    return p_value
+
+def permutation_anova(df, col_num, col_cat):
+    def anova_statistic(x, y):
+        df_anova = pd.DataFrame({col_num: x, col_cat: y})
+        groups = [group[col_num].values for name, group in df_anova.groupby(col_cat)]
+        F_statistic, _ = stats.f_oneway(*groups)
+        return F_statistic
+
+    p_value = permutation_test(df[col_num], df[col_cat], method='approximate', num_rounds=10000, func=anova_statistic)
+    return p_value
+
+# Função principal corrigida
+def teste_de_hipotese_numcat(df, col_num, col_cat):
     
-    if len(df[col_cat].unique()) == 2:
-        grupo1, grupo2 = grupos
-        if group_normality_test(df, col_num, col_cat):
-            # teste T de Student
-            stat, p_value = stats.ttest_ind(grupo1, grupo2); print('P-value (Teste T):', pval_string(p_value))
+    qtd_levels = len(df[col_cat].unique())  # Número de categorias
+    tam_grupos = df[col_cat].value_counts()  # Tamanho dos grupos
+
+    # Verifica se algum grupo tem tamanho menor que 30
+    usa_permutacao = any(tam_grupos < 30)
+    
+    if qtd_levels <= 2:
+        # Testes para 2 categorias
+        if group_normality_test(df, col_num, col_cat, 1):
+            # Dados seguem distribuição normal
+            # Obter os grupos
+            group1 = df[col_num][df[col_cat] == df[col_cat].unique()[0]]
+            group2 = df[col_num][df[col_cat] == df[col_cat].unique()[1]]
+            
+            # Teste de homogeneidade (Bartlett)
+            teste_homogeneidade = stats.levene(group1, group2, center='mean')
+            
+            if teste_homogeneidade.pvalue > 0.05:
+                if usa_permutacao:
+                    # Teste t com permutação
+                    teste_usado = "Student's T-test (Fisher-Pitman)"
+                    pvalor = permutation_t_test(group1, group2)
+                else:
+                    # Teste t padrão
+                    teste_usado = "Student's T-test"
+                    pvalor = stats.ttest_ind(group1, group2, equal_var=True).pvalue
+            else:
+                if usa_permutacao:
+                    # Teste t de Welch com permutação
+                    teste_usado = "Welch's T-test (Fisher-Pitman)"
+                    pvalor = permutation_t_test(group1, group2)
+                else:
+                    # Teste t de Welch padrão
+                    teste_usado = "Welch's T-test"
+                    pvalor = stats.ttest_ind(group1, group2, equal_var=False).pvalue
         else:
-            # teste de Mann-Whitney
-            stat, p_value = stats.mannwhitneyu(grupo1, grupo2); print('P-value (Mann-Whitney):', pval_string(p_value))
-
-    elif len(df[col_cat].unique()) > 2:
-        if group_normality_test(df, col_num, col_cat):
-            # teste ANOVA
-            f_value, p_value = stats.f_oneway(*grupos); print('P-value (Anova):', pval_string(p_value))
-
+            # Dados não seguem distribuição normal
+            group1 = df[col_num][df[col_cat] == df[col_cat].unique()[0]]
+            group2 = df[col_num][df[col_cat] == df[col_cat].unique()[1]]
+            if usa_permutacao:
+                # Teste de Mann-Whitney com permutação
+                teste_usado = "Mann-Whitney U Test (Fisher-Pitman)"
+                p_value = permutation_test(group1, group2, method='approximate', num_rounds=10000, func='x_mean != y_mean')
+                pvalor = p_value
+            else:
+                # Teste de Mann-Whitney padrão
+                teste_usado = "Mann-Whitney U Test"
+                pvalor = stats.mannwhitneyu(group1, group2, alternative='two-sided').pvalue
+    else:
+        # Testes para mais de 2 categorias
+        if group_normality_test(df, col_num, col_cat, 1):
+            # Dados seguem distribuição normal
+            groups = [df[col_num][df[col_cat] == cat] for cat in df[col_cat].unique()]
+            # Teste de homogeneidade (Bartlett)
+            teste_homogeneidade = stats.levene(*groups, center='mean')
+            
+            if teste_homogeneidade.pvalue > 0.05:
+                if usa_permutacao:
+                    # ANOVA com permutação
+                    teste_usado = "One-way ANOVA (Fisher-Pitman)"
+                    pvalor = permutation_anova(df, col_num, col_cat)
+                else:
+                    # ANOVA padrão
+                    teste_usado = "One-way ANOVA"
+                    pvalor = stats.f_oneway(*groups).pvalue
+            else:
+                if usa_permutacao:
+                    # Welch ANOVA com permutação (não diretamente disponível, usamos permutação da ANOVA)
+                    teste_usado = "Welch's ANOVA (Fisher-Pitman)"
+                    pvalor = permutation_anova(df, col_num, col_cat)
+                else:
+                    # Welch ANOVA padrão
+                    teste_usado = "Welch's ANOVA"
+                    pvalor = stats.oneway(*groups, equal_var=False).pvalue  # Note que a função oneway não existe assim; podemos usar um teste alternativo ou mencionar que Welch ANOVA não está diretamente disponível
         else:
-            # Kruskal-Wallis
-            kruskal_stat, p_value = stats.kruskal(*grupos); print('P-value (Kruskal-Wallis):', pval_string(p_value))
+            # Dados não seguem distribuição normal
+            groups = [df[col_num][df[col_cat] == cat] for cat in df[col_cat].unique()]
+            if usa_permutacao:
+                # Kruskal-Wallis com permutação (não diretamente disponível, usamos permutação da ANOVA)
+                teste_usado = "Kruskal-Wallis Test (Fisher-Pitman)"
+                pvalor = permutation_anova(df, col_num, col_cat)
+            else:
+                # Kruskal-Wallis padrão
+                teste_usado = "Kruskal-Wallis Test"
+                pvalor = stats.kruskal(*groups).pvalue
+    
+    return {'p_value': pvalor, 'test': teste_usado}
 
-            if p_value < 0.05:
-                # Pós Teste de Dunn
-                dunn_test = sp.posthoc_dunn(df, val_col=col_num, group_col=col_cat, p_adjust='bonferroni')
-                for i in dunn_test.columns:dunn_test[i] = dunn_test[i].apply(lambda x: pval_string(x))
-                print('P-value (Pós-Teste de Dunn):')
-                display(print(dunn_test))
+####################################################
 
-    # GRAFICO ####################################################################
+import scikit_posthocs as sp
+import statsmodels.api as sm
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
+
+# Função auxiliar para converter p-valores em string com interpretação
+def pval_string(pval):
+    if pval < 0.001:
+        return "<0.001"
+    else:
+        return f"{pval:.3f}"
+
+# Função de pós-teste
+def pos_teste_numcat(df, col_cat, col_num):
+    # Verificar a normalidade
+    normalidade = group_normality_test(df, col_num, col_cat, 1)
+
+    if normalidade:  # Caso não haja normalidade em algum dos grupos
+        # Pós-Teste de Dunn
+        dunn_test = sp.posthoc_dunn(df, val_col=col_num, group_col=col_cat, p_adjust='bonferroni')
+        # Aplicar a transformação para interpretação dos p-valores
+        for i in dunn_test.columns:
+            dunn_test[i] = dunn_test[i].apply(lambda x: pval_string(x))
+        print('P-value (Pós-Teste de Dunn):')
+        display(dunn_test)
+    
+    else:
+        # Pós-teste de Tukey
+        tukey = pairwise_tukeyhsd(endog=df[col_num], groups=df[col_cat], alpha=0.05)
+        
+        # Transformar o resultado do teste de Tukey em um DataFrame
+        tukey_df = pd.DataFrame(data=tukey._results_table.data[1:], columns=tukey._results_table.data[0])
+        
+        # Aplicar a transformação nos p-valores para interpretação
+        tukey_df['p-adj'] = tukey_df['p-adj'].apply(lambda x: pval_string(x))
+        
+        print('P-value (Pós-Teste de Tukey):')
+        display(tukey_df[['group1', 'group2', 'p-adj']])
+
+####################################################
+
+import plotly.express as px # grafico
+def grafico_numcat(df, col_cat, col_num):
     fig = px.violin(df, x=col_cat, y=col_num, color=col_cat, box=True, points="all")
     return(fig)
 
+####################################################
+def analise_numcat(df, col_cat, col_num):
+    teste_de_hipotese_numcat(df, col_num, col_cat)
+    pos_teste_numcat(df, col_cat, col_num)
+    grafico_numcat(df, col_cat, col_num)
 #############################################################################################################
 
 # Intervalo de confiança
