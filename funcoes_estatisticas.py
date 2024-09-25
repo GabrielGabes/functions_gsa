@@ -438,7 +438,7 @@ def pval_string(pval):
         return f"{pval:.3f}"
 
 # Função de pós-teste
-def pos_teste_numcat(df, col_cat, col_num):
+def pos_teste_numcat(df, col_num, col_cat):
     # Verificar a normalidade
     normalidade = group_normality_test(df, col_num, col_cat, 1)
 
@@ -467,15 +467,17 @@ def pos_teste_numcat(df, col_cat, col_num):
 ####################################################
 
 import plotly.express as px # grafico
-def grafico_numcat(df, col_cat, col_num):
+def grafico_numcat(df, col_num, col_cat, showlegend=False):
     fig = px.violin(df, x=col_cat, y=col_num, color=col_cat, box=True, points="all")
+    # Atualizando a configuração do layout para não mostrar a legenda
+    fig.update_layout(showlegend=showlegend)
     return(fig)
 
 ####################################################
-def analise_numcat(df, col_cat, col_num):
-    teste_de_hipotese_numcat(df, col_num, col_cat)
-    pos_teste_numcat(df, col_cat, col_num)
-    grafico_numcat(df, col_cat, col_num)
+def analise_numcat(df, col_num, col_cat):
+    display(teste_de_hipotese_numcat(df, col_num, col_cat))
+    display(pos_teste_numcat(df, col_num, col_cat))
+    display(grafico_numcat(df, col_num, col_cat))
 #############################################################################################################
 
 # Intervalo de confiança
