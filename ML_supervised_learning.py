@@ -219,10 +219,11 @@ def gridsearch_mult_models_threshold(fd, y='y', beta = 1, linspace_thresholds = 
         soma_classificacoes = np.zeros(len(fd))
         count = 0
         for proba_modelos in colunas_proba_modelos:
-            soma_classificacoes += np.where(fd[proba_modelos] >= combinacoes[i][count], 1, 0)
-            count =+ 1
+            corte = combinacoes[i][count]
+            soma_classificacoes += np.where(fd[proba_modelos] >= corte, 1, 0)
+            count += 1
 
-        maioria = int((count/2) + 1)
+        maioria = int((count/2)) + 1
         # classificacao_final
         previsoes_personalizadas = np.where(soma_classificacoes >= maioria, 1, 0)
         #######################################################################################
