@@ -57,10 +57,10 @@ def num_string(valor, digitos):
 
 def freq_table(df, variavel):
     # Realiza a contagem dos valores únicos, excluindo NaNs por padrão.
-    contagem = df[variavel].value_counts(dropna=False, normalize=True)
+    contagem = df[variavel].value_counts(dropna=False, normalize=False)
     
     # Converte a contagem para porcentagem e formata os números.
-    contagem_porcentagem = contagem * 100
+    contagem_porcentagem = df[variavel].value_counts(dropna=False, normalize=True) * 100
     
     # Cria um DataFrame para conter os resultados.
     resultado = pd.DataFrame({

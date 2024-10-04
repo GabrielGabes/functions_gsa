@@ -27,10 +27,10 @@ def avaliar_modelo(y_verdadeiro, y_teste, conjunto_nome="", plotar_grafico=False
 ########################################################################################################################################################
 
 # Função que cria tabela com todas metricas de avaliação em cada ponto de threshold
-def aval_modelo_corte_tabela(x_teste, y_teste, classificador, beta = 1, pontos_de_corte = np.arange(0, 1.1, 0.10)):
+def aval_modelo_corte_tabela(x_teste, y_teste, classificador, beta = 1, pontos_de_corte = np.arange(10, 110, 10)):
         
     previsoes_proba = classificador.predict_proba(x_teste)
-    probs_positivas = previsoes_proba[:, 1]
+    probs_positivas = previsoes_proba[:, 1]*100
 
     # Inicializando um DataFrame para armazenar as métricas
     fd = pd.DataFrame(columns=['threshold', 'tn', 'fp', 'fn', 'tp'])
@@ -203,7 +203,7 @@ def adicionar_previsoes(x_teste, y_teste, **modelos):
 ########################################################################################################################################################
 import itertools
 
-def gridsearch_mult_models_threshold(fd, y='y', beta = 1, linspace_thresholds = np.arange(10, 100, 10)):
+def gridsearch_mult_models_threshold(fd, y='y', beta = 1, linspace_thresholds = np.arange(0, 100, 10)):
 
     y_teste = fd[y]
     colunas_proba_modelos = fd.drop(y, axis=1).columns
@@ -222,8 +222,11 @@ def gridsearch_mult_models_threshold(fd, y='y', beta = 1, linspace_thresholds = 
             corte = combinacoes[i][count]
             soma_classificacoes += np.where(fd[proba_modelos] >= corte, 1, 0)
             count += 1
-
-        maioria = int((count/2)) + 1
+        
+        qtd_combinacoes_n0 = sum(1 for valor in combinacoes[i] if valor != 0)
+        maioria = int((qtd_combinacoes_n0/2)) + 1
+        # maioria = int((count/2)) + 1 # antes
+        
         # classificacao_final
         previsoes_personalizadas = np.where(soma_classificacoes >= maioria, 1, 0)
         #######################################################################################
