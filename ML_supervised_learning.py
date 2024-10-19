@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.metrics import confusion_matrix, classification_report, RocCurveDisplay
 
 # Função para avaliação de modelos exibindo metricas de avaliação
-def avaliar_modelo(y_verdadeiro, y_teste, conjunto_nome="", plotar_grafico=False):
+def avaliar_modelo(y_true, y_pred, conjunto_nome="", plotar_grafico=False):
     """
     Função para avaliar e imprimir o relatório de classificação e a matriz de confusão.
     """
@@ -14,37 +14,34 @@ def avaliar_modelo(y_verdadeiro, y_teste, conjunto_nome="", plotar_grafico=False
     print('*' * 70)
     # Matriz
     print("Matriz de Confusão:", conjunto_nome,":\n")
-    print(confusion_matrix(y_verdadeiro, y_teste))
+    print(confusion_matrix(y_true, y_pred))
     
     print('*' * 50)
     
     print("Relatório de Classificação:", conjunto_nome,":\n")
-    print(classification_report(y_verdadeiro, y_teste))
+    print(classification_report(y_true, y_pred))
     print('*' * 70)
 
     if plotar_grafico == True:
-        display(RocCurveDisplay.from_predictions(y_verdadeiro, y_teste, name = conjunto_nome))
+        display(RocCurveDisplay.from_predictions(y_true, y_pred, name = conjunto_nome))
 ########################################################################################################################################################
 
 # Função que cria tabela com todas metricas de avaliação em cada ponto de threshold
-def aval_modelo_corte_tabela(x_teste, y_teste, classificador, beta = 1, pontos_de_corte = np.arange(10, 110, 10)):
-        
-    previsoes_proba = classificador.predict_proba(x_teste)
-    probs_positivas = previsoes_proba[:, 1]*100
+def aval_modelo_corte_tabela(y_true, y_probs_positivas, beta = 1.5, pontos_de_corte = np.arange(0, 100, 10)):
 
     # Inicializando um DataFrame para armazenar as métricas
     fd = pd.DataFrame(columns=['threshold', 'tn', 'fp', 'fn', 'tp'])
 
     # Loop pelos pontos de corte
     for threshold in pontos_de_corte:
-        previsoes_personalizadas = (probs_positivas >= threshold).astype(int)
+        previsoes_personalizadas = (y_probs_positivas >= threshold).astype(int)
 
         # Calculando os valores de tn, fp, fn, tp
-        tn = len(np.where((previsoes_personalizadas == 0) & (y_teste == 0))[0])
-        fp = len(np.where((previsoes_personalizadas == 1) & (y_teste == 0))[0])
+        tn = len(np.where((previsoes_personalizadas == 0) & (y_true == 0))[0])
+        fp = len(np.where((previsoes_personalizadas == 1) & (y_true == 0))[0])
         
-        fn = len(np.where((previsoes_personalizadas == 0) & (y_teste == 1))[0])
-        tp = len(np.where((previsoes_personalizadas == 1) & (y_teste == 1))[0])
+        fn = len(np.where((previsoes_personalizadas == 0) & (y_true == 1))[0])
+        tp = len(np.where((previsoes_personalizadas == 1) & (y_true == 1))[0])
 
         # Adicionando os resultados ao DataFrame 'fd'
         fd = pd.concat([fd, pd.DataFrame([[threshold, tn, fp, fn, tp]], columns=fd.columns)])
@@ -188,7 +185,6 @@ def adicionar_previsoes(x_teste, y_teste, **modelos):
     # Para cada modelo, gera previsões e adiciona ao DataFrame
     for nome, modelo in modelos.items():
         df[nome] = modelo.predict_proba(x_teste)[:, 1] * 100
-
     return df
 
 # Exemplo de uso:
@@ -204,7 +200,7 @@ def adicionar_previsoes(x_teste, y_teste, **modelos):
 import itertools
 
 def gridsearch_mult_models_threshold(fd, y='y', beta = 1, linspace_thresholds = np.arange(0, 100, 10)):
-
+    # fd == df_previsoes
     y_teste = fd[y]
     colunas_proba_modelos = fd.drop(y, axis=1).columns
 
