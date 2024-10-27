@@ -27,8 +27,8 @@ def avaliar_modelo(y_true, y_pred, conjunto_nome="", plotar_grafico=False):
 ########################################################################################################################################################
 
 # Função que cria tabela com todas metricas de avaliação em cada ponto de threshold
-def aval_modelo_corte_tabela(y_true, y_probs_positivas, beta = 1.5, pontos_de_corte = np.arange(0, 100, 10)):
-
+def aval_modelo_corte_tabela(y_true, y_probs_positivas, beta = 1.5, pontos_de_corte = np.arange(10, 100, 10)):
+    y_probs_positivas = np.array(y_probs_positivas)
     # Inicializando um DataFrame para armazenar as métricas
     fd = pd.DataFrame(columns=['threshold', 'tn', 'fp', 'fn', 'tp'])
 
@@ -52,9 +52,9 @@ def aval_modelo_corte_tabela(y_true, y_probs_positivas, beta = 1.5, pontos_de_co
     ######################################################################################
 
     # Inicializar as colunas das métricas com NaN
-    metricas_de_aval = ['acuracia', 'precisao', 'sensibilidade', 'especificidade', 'f1',
+    metricas_de_aval = ['acuracia', 'precisao', 'sensibilidade', 'especificidade', 'f1', 'fb_score',
                         'valor_pre_posi', 'valor_pre_neg', 'taxa_falsos_positivos', 'taxa_falsos_negativos',
-                        'fdr', 'fo_r', 'indice_youden', 'coef_matthews', 'fb_score']
+                        'fdr', 'fo_r', 'indice_youden', 'coef_matthews']
     fd[metricas_de_aval] = 0
 
     # Loop para calcular as métricas em cada linha
@@ -199,7 +199,7 @@ def adicionar_previsoes(x_teste, y_teste, **modelos):
 ########################################################################################################################################################
 import itertools
 
-def gridsearch_mult_models_threshold(fd, y='y', beta = 1, linspace_thresholds = np.arange(0, 100, 10)):
+def gridsearch_mult_models_threshold(fd, y='y', beta = 1.5, linspace_thresholds = np.arange(0, 100, 10)):
     # fd == df_previsoes
     y_teste = fd[y]
     colunas_proba_modelos = fd.drop(y, axis=1).columns
@@ -242,9 +242,9 @@ def gridsearch_mult_models_threshold(fd, y='y', beta = 1, linspace_thresholds = 
 
     ######################################################################################
     # Inicializar as colunas das métricas com NaN
-    metricas_de_aval = ['acuracia', 'precisao', 'sensibilidade', 'especificidade', 'f1',
+    metricas_de_aval = ['acuracia', 'precisao', 'sensibilidade', 'especificidade', 'f1', 'fb_score',
                         'valor_pre_posi', 'valor_pre_neg', 'taxa_falsos_positivos', 'taxa_falsos_negativos',
-                        'fdr', 'fo_r', 'indice_youden', 'coef_matthews', 'fb_score']
+                        'fdr', 'fo_r', 'indice_youden', 'coef_matthews']
     tabela[metricas_de_aval] = 0
 
     # Loop para calcular as métricas em cada linha
